@@ -9,34 +9,37 @@ public:
     Wavetable()
     {
         juce::AudioFormatManager manager;
-        juce::FileChooser chooser("Please select the wavetable...", juce::File(), manager.getWildcardForAllFormats());
-        juce::File file(chooser.getResult());
+        manager.registerBasicFormats();
+        juce::File file("C:\\Users\\zanka\\Documents\\Sources\\dsp\\Wabetable\\wavetable\\bez_vae_v1.07_dims24_b256_73_free.wav");
+
         juce::AudioFormatReader *reader = manager.createReaderFor(file);
+        if (reader != nullptr)
+        {
+            auto numChannels = reader->numChannels;
+            auto lengthInSamples = reader->lengthInSamples;
 
-        auto numChannels = reader->numChannels;
-        auto lengthInSamples = reader->lengthInSamples;
+            table.setSize((int)numChannels, (int)lengthInSamples);
 
-        table.setSize((int)numChannels, (int)lengthInSamples);
-        
-        reader->read(&table,                     
-                    0,                       
-                    lengthInSamples, 
-                    0,                           
-                    true,                        
-                    true);
+            reader->read(&table,
+                         0,
+                         lengthInSamples,
+                         0,
+                         true,
+                         true);
 
-        const int tableSize = 2048;
-        // table.setSize(1, tableSize);
-        // auto *samples = table.getWritePointer(0);
-        // for (int i = 0; i < tableSize; ++i)
-        // {
-        //     float phase = (float)i / (float)tableSize * juce::MathConstants<float>::twoPi;
-        //     samples[i] = std::sin(phase);
-        // }
-
-        tableLength = tableSize;
-        tableN = lengthInSamples / tableSize;
-    }
+            const int tableSize = 2048;
+            tableLength = tableSize;
+            tableN = 1;
+        }
+        else
+        {
+            DBG("Failed to create reader for wavetable file!");
+            table.setSize(1, 2048);
+            table.clear();
+            tableLength = 2048;
+            tableN = 1;
+        }
+        }
 
     float getSample(float phase)
     {
